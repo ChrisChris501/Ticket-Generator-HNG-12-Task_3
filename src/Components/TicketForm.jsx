@@ -64,9 +64,19 @@ const TicketForm = ({ onSubmit }) => {
     <div className="min-h-screen flex items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-lg sm:max-w-2xl bg-[#041E23] p-6 sm:p-10 rounded-lg shadow-lg border border-[#166270]">
         <div>
-        <h2 className="text-xl font-bold mb-6 text-white text-center sm:text-left relative after:content-[''] after:block after:h-[3px] after:w-full after:bg-[linear-gradient(to_right,#145F6C_50%,#093239_50%)] after:mt-3">
-        Attendee Details
-        </h2>
+        <div className="font-light mb-6 text-white text-center sm:text-left">
+      <div className="grid grid-cols-2 items-center relative">
+      <h2 className="text-xl sm:text-2xl font-light mb-2">Attendee Details</h2>
+      <h5 className="text-right">Step 2/3</h5>
+
+      {/* Gradient Line */}
+      <div className="absolute bottom-0 left-0 w-full h-[3px] mb-2">
+        <div className="w-1/2 h-full bg-[#145F6C] inline-block"></div>
+        <div className="w-1/2 h-full bg-[#093239] inline-block"></div>
+      </div>
+    </div>
+</div>
+
     </div>
         
         <form
