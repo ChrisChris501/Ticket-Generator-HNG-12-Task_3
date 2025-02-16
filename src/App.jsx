@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom"; // Remove BrowserRouter
+import { Route, Routes } from "react-router-dom";
 import TicketForm from "./Components/TicketForm";
 import TicketConfirmation from "./Components/TicketConfirmation";
 import Ticket from "./Components/Ticket";
