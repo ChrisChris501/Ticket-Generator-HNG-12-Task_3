@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { db } from "../firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
 
 const TicketForm = ({ onSubmit }) => {
   const navigate = useNavigate();
@@ -24,33 +26,57 @@ const TicketForm = ({ onSubmit }) => {
   const validate = () => {
     let errors = {};
     if (!formData.fullName.trim()) errors.fullName = "Full Name is required.";
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+    if (!formData.email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       errors.email = "Invalid email format.";
+    }
     if (!formData.avatar) errors.avatar = "Profile photo is required.";
     if (!formData.projectInfo.trim()) errors.projectInfo = "Project details are required.";
     return errors;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length === 0) {
-      onSubmit(formData);
-      navigate("/TicketConfirmation", { state: formData });
-    } else {
-      setErrors(validationErrors);
-    }
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  const validationErrors = validate();
 
-  const handleFileChange = (e) => {
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;  // Prevents further execution
+  }
+
+  try {
+    const docRef = await addDoc(collection(db, "tickets"), formData);
+    const ticketData = { ...formData, id: docRef.id };
+
+    navigate("/TicketConfirmation", { state: ticketData });
+  } catch (error) {
+    console.error("Error saving to Firestore:", error);
+  }
+};
+
+
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-        setFormData({ ...formData, avatar: reader.result });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const fileData = new FormData();
+    fileData.append("file", file);
+    fileData.append("upload_preset", "ec798776-5be7-466c-b2a6-13c491f0ded9");
+
+    try {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/dqf8lzfqe/image/upload`, {
+        method: "POST",
+        body: fileData,
+      });
+
+      const data = await res.json();
+      if (data.secure_url) {
+        setImagePreview(data.secure_url);
+        setFormData((prev) => ({ ...prev, avatar: data.secure_url }));
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
     }
   };
 
@@ -96,9 +122,7 @@ const TicketForm = ({ onSubmit }) => {
                 <input type="file" id="fileUpload" className="hidden" accept="image/*" onChange={handleFileChange} />
               </div>
             </div>
-          </div>
-          
-          <div className="space-y-4">
+            <div className="space-y-4">
             <label className="block text-white my-4">
               Enter your name*
               <input type="text" className="p-2 w-full bg-[#08252B] text-white rounded-lg border border-[#072E35] outline-none focus:ring-2 focus:ring-[#24A0B5]" value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
@@ -117,7 +141,7 @@ const TicketForm = ({ onSubmit }) => {
               {errors.projectInfo && <p className="text-red-500 text-sm">{errors.projectInfo}</p>}
             </label>
           </div>
-          
+          </div>
           <div className="grid grid-cols-2 gap-4 mt-4 sm:grid-row">
             <button type="button" className="w-full sm:w-auto bg-transparent text-[#24A0B5] p-2 rounded-lg border border-[#24A0B5] hover:bg-[#24A0B5] hover:text-white transition" onClick={() => navigate("/Ticket")}>Back</button>
             <button type="submit" className="w-full sm:w-auto bg-[#24A0B5] text-white p-2 rounded-lg border border-[#166270] hover:bg-[#1c8a9f] transition"
